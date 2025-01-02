@@ -7,8 +7,8 @@ import time
 BASE_URL = "https://www.accesstoinsight.org"
 INDEX_URL = f"{BASE_URL}/index-sutta.html"
 
-# Maximum number of sutras to scrape
-MAX_SUTRAS = 500
+# Maximum number of sutras to scrape (fort tests I modify to 5, for final at least 100)
+MAX_SUTRAS = 100
 
 # Function to fetch sutra links from the index page
 def fetch_sutra_links():
@@ -38,13 +38,22 @@ def fetch_sutra_content(url):
     
     soup = BeautifulSoup(response.content, 'html.parser')
     
-    # Extract title and content
+    # Extract the title
     title = soup.find('h1').text.strip() if soup.find('h1') else "Unknown Title"
-    content = []
-    for paragraph in soup.select("p"):
-        content.append(paragraph.text.strip())
     
-    return {"title": title, "url": url, "content": "\n".join(content)}
+    # Extract the sutra text within the target div
+    sutra_content = []
+    main_content = soup.find('div', id='COPYRIGHTED_TEXT_CHUNK')  # Target the specific div by id
+    if main_content:
+        for paragraph in main_content.find_all('p'):  # Extract all paragraphs within the div
+            sutra_content.append(paragraph.text.strip())
+    else:
+        print(f"No main content found for: {url}")
+    
+    # Join the paragraphs into a single text block
+    content = "\n".join(sutra_content) if sutra_content else "No content found"
+
+    return {"title": title, "url": url, "content": content}
 
 # Main function to orchestrate the scraping process
 def main():
@@ -76,3 +85,4 @@ def main():
 # Run the main function
 if __name__ == "__main__":
     main()
+
